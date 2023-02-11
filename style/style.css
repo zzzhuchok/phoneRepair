@@ -1,0 +1,10 @@
+.container {
+  max-width: 700px;
+}
+
+.form {
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: .375rem;
+}
