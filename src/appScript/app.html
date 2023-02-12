@@ -1,0 +1,86 @@
+<script>
+  const form = document.getElementById('form')
+  const btnCreate = document.getElementById('btn-create');
+  const btnShowAllList = document.getElementById('btn-showAllList');
+  const containerTablePhones = document.getElementById('table-phones')
+
+
+  form.addEventListener('submit', handleFormSubmit)
+  btnCreate.addEventListener('click', handleBtnCreateClick)
+  btnShowAllList.addEventListener('click', handleBtnShowAllList)
+
+
+  /* HANDLERS */
+  function handleFormSubmit(e) {
+    e.preventDefault()
+    google.script.run.withSuccessHandler(() => {
+      form.reset()
+    }).withFailureHandler(() => {
+      alert('что-то пошло не так...')
+    }).acceptData(this)
+  }
+
+  function handleBtnCreateClick() {
+    if (!this.classList.contains('active')) {
+      this.classList.add('active')
+      form.classList.remove('visually-hidden')
+    } else {
+      this.classList.remove('active')
+      form.classList.add('visually-hidden')
+    }
+  }
+
+  function handleBtnShowAllList() {
+    if (!this.classList.contains('active')) {
+      this.classList.add('active')
+      google.script.run.withSuccessHandler(onSuccessGetDataSheet).withFailureHandler(() => {
+        console.log('---', 'что-то пошло не так')
+      }).getDataSheet()
+    }
+  }
+  /* ===================================================================================== */
+
+  function onSuccessGetDataSheet(data) {
+    containerTablePhones.innerHTML = ''
+    if (data) {
+      const headTableData = data[0].map(el => `<th class="p-1">${el.toString().replaceAll('\n', '<br>')}</th>`).join('');
+      let bodyTableData = '';
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0]) {
+          bodyTableData += '<tr>' + data[i].map(el => {
+            let string = el.toString()
+
+            if (string.includes('#')) {
+              const colorIndex = string.indexOf('#')
+              const color = string.substring(colorIndex, colorIndex + 7)
+              string = string.replace(`${color}`, `<span class="phone-color" style="background-color: ${color}"></span>`)
+            }
+
+            return `<td class="p-2">${string.replaceAll('\n', '<br>')}</td>`
+          }).join('') + '</tr>'
+        }
+      }
+
+      const fragment = document.createDocumentFragment()
+      const containerTable = document.createElement('div')
+      containerTable.classList = 'table-responsive mb-4'
+      fragment.append(containerTable)
+
+      const table = document.createElement('table');
+      table.classList = 'table-history table table-sm table-bordered'
+      table.innerHTML = `
+        <thead>
+          <tr class="table-primary align-middle">${headTableData}</tr>
+        </thead>
+        <tbody class="align-middle">
+          ${bodyTableData}
+        </tbody>
+        `
+
+      containerTable.append(table)
+      containerTablePhones.append(fragment);
+
+    }
+  }
+
+</script>
